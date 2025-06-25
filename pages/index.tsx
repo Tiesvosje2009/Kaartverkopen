@@ -6,7 +6,6 @@ export default function Home() {
   const [response, setResponse] = useState("");
 
   const handleGenerate = () => {
-    // Voor nu is dit nep, straks koppelen we dit aan OpenAI
     setResponse(`🎉 Jouw kaartidee: "${input}" 🎉`);
   };
 
@@ -71,4 +70,3 @@ export default function Home() {
     </>
   );
 }
-
