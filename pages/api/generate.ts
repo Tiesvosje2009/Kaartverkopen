@@ -1,15 +1,18 @@
 import { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // Check of er een body en prompt is
-  if (!req.body || !req.body.prompt) {
-    return res.status(400).json({ error: "Missing prompt in request body" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Alleen POST-verzoeken zijn toegestaan" });
   }
 
-  const prompt = req.body.prompt;
+  const { prompt } = req.body;
+
+  if (!prompt) {
+    return res.status(400).json({ error: "Prompt ontbreekt in het verzoek" });
+  }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -18,23 +21,32 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({
         model: "gpt-4",
         messages: [
-          { role: "system", content: "Jij bent een creatieve kaartenschrijver. Hou het luchtig en vriendelijk." },
-          { role: "user", content: `Schrijf een kaarttekst voor: ${prompt}` },
+          {
+            role: "system",
+            content: "Je bent een vrolijke kaartenmaker. Schrijf een originele kaarttekst voor het volgende onderwerp.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
         ],
-        temperature: 0.8,
+        temperature: 0.7,
       }),
     });
 
-    if (!response.ok) {
-      const errData = await response.text();
-      return res.status(response.status).json({ error: `OpenAI API error: ${errData}` });
+    const data = await openaiRes.json();
+
+    // Debug-logging bij fout
+    if (!data.choices || !data.choices[0]) {
+      console.error("OpenAI antwoord:", data);
+      return res.status(500).json({ error: "Geen geldig antwoord van OpenAI" });
     }
 
-    const data = await response.json();
-    const message = data.choices?.[0]?.message?.content || "Kon geen kaart maken";
+    const aiMessage = data.choices[0].message.content;
 
-    return res.status(200).json({ result: message });
+    res.status(200).json({ result: aiMessage });
   } catch (error) {
-    return res.status(500).json({ error: "Server error: " + error.message });
+    console.error("Fout bij OpenAI-aanroep:", error);
+    res.status(500).json({ error: "Interne serverfout bij AI-aanroep" });
   }
 }
