@@ -1,72 +1,49 @@
-import Head from "next/head";
 import { useState } from "react";
 
 export default function Home() {
-  const [input, setInput] = useState("");
-  const [response, setResponse] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleGenerate = () => {
-    setResponse(`🎉 Jouw kaartidee: "${input}" 🎉`);
+  const handleGenerate = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      setResult(data.result);
+    } catch (err) {
+      setResult("Er ging iets mis.");
+    }
+    setLoading(false);
   };
 
   return (
-    <>
-      <Head>
-        <title>Kaartensite</title>
-      </Head>
-      <main
-        style={{
-          minHeight: "100vh",
-          background: "linear-gradient(to right, #f0f0f0, #d4e0ff)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          fontFamily: "Arial, sans-serif",
-          padding: "2rem",
-        }}
+    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <h1>🎨 Kaartgenerator</h1>
+      <p>Typ hieronder waar de kaart over moet gaan:</p>
+      <input
+        type="text"
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+        placeholder="Bijv. verjaardag, beterschap, etc."
+        style={{ width: "300px", padding: "0.5rem" }}
+      />
+      <button
+        onClick={handleGenerate}
+        style={{ marginLeft: "1rem", padding: "0.5rem 1rem" }}
       >
-        <h1 style={{ fontSize: "2.5rem", color: "#333" }}>Welkom bij Kaartensite</h1>
-        <p style={{ fontSize: "1.2rem", color: "#555", marginBottom: "2rem" }}>
-          Typ hieronder je kaartwens en genereer een uniek ontwerp!
-        </p>
-
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Bijv. 'Verjaardagskaart voor oma'"
-          style={{
-            padding: "1rem",
-            width: "300px",
-            fontSize: "1rem",
-            borderRadius: "6px",
-            border: "1px solid #ccc",
-            marginBottom: "1rem",
-          }}
-        />
-
-        <button
-          onClick={handleGenerate}
-          style={{
-            padding: "1rem 2rem",
-            fontSize: "1rem",
-            backgroundColor: "#0070f3",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-          }}
-        >
-          Genereer kaart
-        </button>
-
-        {response && (
-          <div style={{ marginTop: "2rem", color: "#0070f3", fontSize: "1.2rem" }}>
-            {response}
-          </div>
-        )}
-      </main>
-    </>
+        {loading ? "Bezig..." : "Genereer kaarttekst"}
+      </button>
+      {result && (
+        <div style={{ marginTop: "2rem", background: "#f4f4f4", padding: "1rem" }}>
+          <h2>✨ Jouw kaarttekst:</h2>
+          <p>{result}</p>
+        </div>
+      )}
+    </div>
   );
 }
