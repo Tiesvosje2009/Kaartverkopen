@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from "next";
+import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
@@ -16,17 +16,25 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "HTTP-Referer": "https://jouw-site.vercel.app", // vervang door jouw domeinnaam
+        "X-Title": "Kaartensite"
       },
       body: JSON.stringify({
-        model: "mistralai/mixtral-8x7b",
+        model: "openrouter/mixtral-8x7b",
         messages: [
-          { role: "system", content: "Je bent een creatieve kaartenmaker. Schrijf een korte, originele tekst voor dit onderwerp:" },
-          { role: "user", content: prompt },
+          {
+            role: "system",
+            content: "Je bent een creatieve kaartenmaker. Schrijf een originele tekst voor dit onderwerp:"
+          },
+          {
+            role: "user",
+            content: prompt
+          }
         ],
         temperature: 0.7,
-        max_tokens: 200,
-      }),
+        max_tokens: 200
+      })
     });
 
     const data = await response.json();
@@ -38,7 +46,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(200).json({ result: data.choices[0].message.content });
   } catch (error) {
-    console.error("Fout tijdens AI-aanroep:", error);
+    console.error("Fout tijdens OpenRouter-aanroep:", error);
     res.status(500).json({ error: "Er ging iets mis met OpenRouter" });
   }
 }
