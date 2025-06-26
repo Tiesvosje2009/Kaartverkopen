@@ -19,10 +19,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4",
+        model: "gpt-3.5-turbo",
         messages: [
-          { role: "system", content: "Je bent een creatieve kaartenmaker. Schrijf een korte, originele tekst voor dit onderwerp:" },
-          { role: "user", content: prompt },
+          {
+            role: "system",
+            content: "Je bent een creatieve kaartenmaker. Schrijf een korte, originele tekst voor dit onderwerp:",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
         ],
         temperature: 0.7,
         max_tokens: 200,
