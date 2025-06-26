@@ -12,23 +12,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "mistralai/mixtral-8x7b",
         messages: [
-          {
-            role: "system",
-            content: "Je bent een creatieve kaartenmaker. Schrijf een korte, originele tekst voor dit onderwerp:",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
+          { role: "system", content: "Je bent een creatieve kaartenmaker. Schrijf een korte, originele tekst voor dit onderwerp:" },
+          { role: "user", content: prompt },
         ],
         temperature: 0.7,
         max_tokens: 200,
@@ -38,13 +32,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = await response.json();
 
     if (!data.choices || !data.choices[0]?.message?.content) {
-      console.error("OpenAI fout:", data);
-      return res.status(500).json({ error: "Geen geldig antwoord van OpenAI" });
+      console.error("OpenRouter fout:", data);
+      return res.status(500).json({ error: "Geen geldig antwoord van OpenRouter" });
     }
 
     res.status(200).json({ result: data.choices[0].message.content });
   } catch (error) {
     console.error("Fout tijdens AI-aanroep:", error);
-    res.status(500).json({ error: "Er ging iets mis met OpenAI" });
+    res.status(500).json({ error: "Er ging iets mis met OpenRouter" });
   }
 }
