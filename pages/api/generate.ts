@@ -16,25 +16,23 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "HTTP-Referer": "https://jouw-site.vercel.app", // vervang door jouw domeinnaam
-        "X-Title": "Kaartensite"
+        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY || ""}`,
       },
       body: JSON.stringify({
-        model: "openrouter/mixtral-8x7b",
+        model: "openai/gpt-3.5-turbo", // Betrouwbaar en vaak gratis
         messages: [
           {
             role: "system",
-            content: "Je bent een creatieve kaartenmaker. Schrijf een originele tekst voor dit onderwerp:"
+            content: "Je bent een creatieve kaartenmaker. Schrijf een leuke, originele tekst voor dit onderwerp:",
           },
           {
             role: "user",
-            content: prompt
-          }
+            content: prompt,
+          },
         ],
         temperature: 0.7,
-        max_tokens: 200
-      })
+        max_tokens: 200,
+      }),
     });
 
     const data = await response.json();
@@ -46,7 +44,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(200).json({ result: data.choices[0].message.content });
   } catch (error) {
-    console.error("Fout tijdens OpenRouter-aanroep:", error);
-    res.status(500).json({ error: "Er ging iets mis met OpenRouter" });
+    console.error("Fout tijdens AI-aanroep:", error);
+    res.status(500).json({ error: "Er ging iets mis met de AI-aanvraag" });
   }
 }
