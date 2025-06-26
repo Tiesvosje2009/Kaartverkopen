@@ -5,45 +5,51 @@ export default function Home() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleGenerate = async () => {
+  const generate = async () => {
     setLoading(true);
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
-      const data = await res.json();
+    setResult("");
+
+    const response = await fetch("/api/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ prompt }),
+    });
+
+    const data = await response.json();
+
+    if (data.result) {
       setResult(data.result);
-    } catch (err) {
-      setResult("Er ging iets mis.");
+    } else {
+      setResult("Er ging iets mis...");
     }
+
     setLoading(false);
   };
 
   return (
-    <div style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>🎨 Kaartgenerator</h1>
-      <p>Typ hieronder waar de kaart over moet gaan:</p>
-      <input
-        type="text"
+    <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
+      <h1>Welkom bij Kaartensite</h1>
+      <p>Hier komt jouw kaartdesign met AI ondersteuning.</p>
+
+      <textarea
+        rows={4}
+        cols={50}
+        placeholder="Typ hier je kaartwens of onderwerp..."
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Bijv. verjaardag, beterschap, etc."
-        style={{ width: "300px", padding: "0.5rem" }}
+        style={{ display: "block", marginTop: "1rem" }}
       />
-      <button
-        onClick={handleGenerate}
-        style={{ marginLeft: "1rem", padding: "0.5rem 1rem" }}
-      >
-        {loading ? "Bezig..." : "Genereer kaarttekst"}
+
+      <button onClick={generate} disabled={loading} style={{ marginTop: "1rem" }}>
+        {loading ? "Genereren..." : "Genereer kaarttekst"}
       </button>
+
       {result && (
-        <div style={{ marginTop: "2rem", background: "#f4f4f4", padding: "1rem" }}>
-          <h2>✨ Jouw kaarttekst:</h2>
+        <div style={{ marginTop: "2rem", background: "#eee", padding: "1rem" }}>
+          <strong>Resultaat:</strong>
           <p>{result}</p>
         </div>
       )}
-    </div>
+    </main>
   );
 }
