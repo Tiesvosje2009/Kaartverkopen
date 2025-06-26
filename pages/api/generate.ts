@@ -8,11 +8,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const { prompt } = req.body;
 
   if (!prompt) {
-    return res.status(400).json({ error: "Prompt ontbreekt in het verzoek" });
+    return res.status(400).json({ error: "Prompt ontbreekt" });
   }
 
   try {
-    const openaiRes = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -21,32 +21,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       body: JSON.stringify({
         model: "gpt-4",
         messages: [
-          {
-            role: "system",
-            content: "Je bent een vrolijke kaartenmaker. Schrijf een originele kaarttekst voor het volgende onderwerp.",
-          },
-          {
-            role: "user",
-            content: prompt,
-          },
+          { role: "system", content: "Je bent een creatieve kaartenmaker. Schrijf een korte, originele tekst voor dit onderwerp:" },
+          { role: "user", content: prompt },
         ],
         temperature: 0.7,
+        max_tokens: 200,
       }),
     });
 
-    const data = await openaiRes.json();
+    const data = await response.json();
 
-    // Debug-logging bij fout
-    if (!data.choices || !data.choices[0]) {
-      console.error("OpenAI antwoord:", data);
+    if (!data.choices || !data.choices[0]?.message?.content) {
+      console.error("OpenAI fout:", data);
       return res.status(500).json({ error: "Geen geldig antwoord van OpenAI" });
     }
 
-    const aiMessage = data.choices[0].message.content;
-
-    res.status(200).json({ result: aiMessage });
+    res.status(200).json({ result: data.choices[0].message.content });
   } catch (error) {
-    console.error("Fout bij OpenAI-aanroep:", error);
-    res.status(500).json({ error: "Interne serverfout bij AI-aanroep" });
+    console.error("Fout tijdens AI-aanroep:", error);
+    res.status(500).json({ error: "Er ging iets mis met OpenAI" });
   }
 }
