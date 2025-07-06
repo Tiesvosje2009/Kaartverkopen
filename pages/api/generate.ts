@@ -1,63 +1,51 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Alleen POST-verzoeken zijn toegestaan' });
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Alleen POST-verzoeken zijn toegestaan" });
   }
 
   const { prompt } = req.body;
+
   if (!prompt) {
-    return res.status(400).json({ error: 'Prompt ontbreekt' });
+    return res.status(400).json({ error: "Prompt ontbreekt" });
   }
 
   try {
-    const response = await fetch('https://api.replicate.com/v1/predictions', {
-      method: 'POST',
+    const response = await fetch("https://api.replicate.com/v1/predictions", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Token ${process.env.REPLICATE_API_KEY}`,
+        "Content-Type": "application/json",
+        Authorization: `Token ${process.env.REPLICATE_API_TOKEN}`,
       },
       body: JSON.stringify({
-        version: 'a7d8a4b8ef8d4ad6a22c2b8899f7fe94b1a9e08e409b0c27f01af3d6107c71e1',
+        version: "7d1d6a54e8b84dbfa7efba0c331b46081e0526e64c5d61760a6b48c4c6e5c4b8", // Stable Diffusion text-to-image model
         input: {
-          prompt: `Schrijf een korte en originele kaarttekst over: ${prompt}`,
-          temperature: 0.7,
-          max_new_tokens: 100
-        }
+          prompt: prompt,
+          width: 512,
+          height: 512,
+          num_outputs: 1,
+          scheduler: "dpmsolver++",
+          guidance_scale: 7.5,
+          num_inference_steps: 30,
+        },
       }),
     });
 
     const data = await response.json();
 
-    if (data?.error) {
-      console.error('Replicate fout:', data);
-      return res.status(500).json({ error: 'AI-service gaf een foutmelding' });
+    if (data.error) {
+      console.error("Replicate fout:", data.error);
+      return res.status(500).json({ error: data.error.message || "Fout bij AI-generatie" });
     }
 
-    // Replicate werkt met async prediction, dus we moeten wachten op resultaat:
-    const predictionUrl = data.urls.get;
-    let resultData = null;
+    const output = data?.prediction?.output || data?.output;
 
-    for (let i = 0; i < 10; i++) {
-      const resultRes = await fetch(predictionUrl, {
-        headers: {
-          Authorization: `Token ${process.env.REPLICATE_API_KEY}`,
-        },
-      });
-      resultData = await resultRes.json();
-
-      if (resultData.status === 'succeeded') break;
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+    if (!output || output.length === 0) {
+      return res.status(500).json({ error: "Geen afbeelding gegenereerd" });
     }
 
-    if (resultData?.output) {
-      res.status(200).json({ result: resultData.output.join('\n') });
-    } else {
-      res.status(500).json({ error: 'AI-resultaat niet ontvangen' });
-    }
-
-  } catch (err) {
-    console.error('Fout:', err);
-    res.status(500).json({ error: 'Er ging iets mis tijdens de AI-aanroep' });
-  }
-}
+    res.status(200).json({ result: output[0] });
+  } catch (error) {
+    console.error("Fout bij replicatie-aanroep:", error);
+    res.status
