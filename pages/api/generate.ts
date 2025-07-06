@@ -19,14 +19,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Authorization: `Token ${process.env.REPLICATE_API_TOKEN}`,
       },
       body: JSON.stringify({
-        version: "7d1d6a54e8b84dbfa7efba0c331b46081e0526e64c5d61760a6b48c4c6e5c4b8", // Model-versie van e.g. SDXL
+        version: "a80ac6c985e6d34c905b35925c379256e4033664eaa90511b3a2b6e5b3cfd312", // LLaMA 2 7B Chat
         input: {
           prompt: prompt,
-          width: 512,
-          height: 512,
-          num_outputs: 1,
-          guidance_scale: 7.5,
-          num_inference_steps: 30,
         },
       }),
     });
@@ -38,15 +33,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(500).json({ error: data.error.message || "Fout bij AI-generatie" });
     }
 
-    const output = data?.prediction?.output || data?.output;
+    const output = data?.output?.join("") || data?.output;
 
-    if (!output || output.length === 0) {
-      return res.status(500).json({ error: "Geen afbeelding gegenereerd" });
+    if (!output) {
+      return res.status(500).json({ error: "Geen antwoord ontvangen" });
     }
 
-    res.status(200).json({ result: output[0] });
+    res.status(200).json({ result: output });
   } catch (error) {
     console.error("Fout bij replicatie-aanroep:", error);
-    res.status(500).json({ error: "Er ging iets mis met de AI" });
+    res.status(500).json({ error: "Er ging iets mis met de AI-aanroep" });
   }
 }
