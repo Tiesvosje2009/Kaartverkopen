@@ -19,13 +19,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Authorization: `Token ${process.env.REPLICATE_API_TOKEN}`,
       },
       body: JSON.stringify({
-        version: "7d1d6a54e8b84dbfa7efba0c331b46081e0526e64c5d61760a6b48c4c6e5c4b8", // Stable Diffusion text-to-image model
+        version: "7d1d6a54e8b84dbfa7efba0c331b46081e0526e64c5d61760a6b48c4c6e5c4b8", // Model-versie van e.g. SDXL
         input: {
           prompt: prompt,
           width: 512,
           height: 512,
           num_outputs: 1,
-          scheduler: "dpmsolver++",
           guidance_scale: 7.5,
           num_inference_steps: 30,
         },
@@ -48,4 +47,6 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(200).json({ result: output[0] });
   } catch (error) {
     console.error("Fout bij replicatie-aanroep:", error);
-    res.status
+    res.status(500).json({ error: "Er ging iets mis met de AI" });
+  }
+}
