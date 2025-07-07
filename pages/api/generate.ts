@@ -35,4 +35,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     res.status(200).json({ predictionId: data.id });
   } catch (error) {
-    console
+    console.error("Fout bij het starten van de Replicate-predictie:", error);
+    res.status(500).json({ error: "Er ging iets mis bij de Replicate-aanroep." });
+  }
+}
